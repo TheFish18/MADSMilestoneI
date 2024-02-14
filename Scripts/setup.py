@@ -7,6 +7,7 @@ from tqdm import tqdm
 import json
 import matplotlib.pyplot as plt
 
+
 def dir_xpts_to_csv(base_dir, save_p):
     """
     Takes a folder of XPTs and converts to a single csv
@@ -73,7 +74,7 @@ def get_common_deficiencies():
     l = ["Vitamin D", "Iron", "Vitamin B12", "Calcium", ]
     raise NotImplementedError
 
-def essential_vitamins_dict():
+def essential_vitamins_dict() -> dict:
     """
     https://www.nia.nih.gov/health/vitamins-and-supplements/vitamins-and-minerals-older-adults#:~:text=There%20are%2013%20essential%20vitamins,keep%20the%20body%20working%20properly.
     There are 13 essential vitamins —

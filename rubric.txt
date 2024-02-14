@@ -27,5 +27,10 @@ Statement of work
     - Who did what
     - Assessment of how collaboration went
     - How to improve collaboration in future work
-
-Code, 
+Code:
+    - Coherent, computational narrative of data manipulation and analysis
+    - Run without errors from top to bottom
+    - Run without warning top to bottom
+    - Include a mix of code and markdown
+    - comments, docstrings
+    - avoid excess output

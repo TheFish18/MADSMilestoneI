@@ -15,60 +15,63 @@ import sys
 #     'lines.linewidth': 4
 # })
 
+class Visualizations:
+    @ staticmethod
+    def ridgeplot(df, standardize=True, units="", xlim=None, sorder=None):
+        """
+        creates a ridgeplot from the given dataframe
 
-def ridgeplot(df, standardize=True, units="", xlim=None, sorder=None):
-    """
-    creates a ridgeplot from the given dataframe
+        parmas:
+            df (pandas.DataFrame): a pandas dataframe with at least two numeric features
+            standardize (bool): performs z-score normalization
+            units (string): optionally specify units
+            xlim (tuple): optionally specify limits of x axis
 
-    parmas:
-        df (pandas.DataFrame): a pandas dataframe with at least two numeric features
-        standardize (bool): performs z-score normalization
-        units (string): optionally specify units
-        xlim (tuple): optionally specify limits of x axis
+        returns:
+            None and outputs a ridgeplot
 
-    returns:
-        None and outputs a ridgeplot
+        """
 
-    """
+        def process_data(df, standardize):
+            if standardize:
+                return zscore(df.select_dtypes(include=np.number)).melt()
+            else:
+                return df.select_dtypes(include=np.number).melt()
 
-    def process_data(df, standardize):
-        if standardize:
-            return zscore(df.select_dtypes(include=np.number)).melt()
-        else:
-            return df.select_dtypes(include=np.number).melt()
+        def get_sorder(df):  # rough sort
+            temp = zscore(df.select_dtypes(include=np.number)).melt()
+            sorder = temp.loc[(temp.value < 0.5) & (temp.value > -0.5)]['variable'].value_counts().index
+            return sorder
 
-    def get_sorder(df):  # rough sort
-        temp = zscore(df.select_dtypes(include=np.number)).melt()
-        sorder = temp.loc[(temp.value < 0.5) & (temp.value > -0.5)]['variable'].value_counts().index
-        return sorder
+        def label(x, color, label):
+            ax = plt.gca()
+            ax.text(0, .2, label, color='black', fontsize=13,
+                    ha="left", va="center", transform=ax.transAxes)
 
-    def label(x, color, label):
-        ax = plt.gca()
-        ax.text(0, .2, label, color='black', fontsize=13,
-                ha="left", va="center", transform=ax.transAxes)
+        sorder = get_sorder(df) if sorder is None else sorder
+        num_of_cols = len(df.columns)
+        df = process_data(df, standardize)
+        x_var = "z-score" if standardize else units
+        xlim = (-5, 5) if xlim is None else xlim
 
-    sorder = get_sorder(df) if sorder is None else sorder
-    num_of_cols = len(df.columns)
-    df = process_data(df, standardize)
-    x_var = "z-score" if standardize else units
-    xlim = (-5, 5) if xlim is None else xlim
+        sns.set_theme(style='white', rc={'axes.facecolor': (0, 0, 0, 0), 'axes.linewidth': 2})
+        palette = sns.color_palette('flare', num_of_cols)[::-1]
+        # TODO: dont hardcode number for palette
 
-    sns.set_theme(style='white', rc={'axes.facecolor': (0, 0, 0, 0), 'axes.linewidth': 2})
-    palette = sns.color_palette('flare', num_of_cols)[::-1]
-    # TODO: dont hardcode number for palette
+        g = sns.FacetGrid(df, row='variable', hue='variable', palette=palette, row_order=sorder, hue_order=sorder,
+                          aspect=20, height=1, sharex=True, xlim=xlim)
 
-    g = sns.FacetGrid(df, row='variable', hue='variable', palette=palette, row_order=sorder, hue_order=sorder,
-                      aspect=20, height=1, sharex=True, xlim=xlim)
+        g.map_dataframe(sns.kdeplot, x='value', fill=True, alpha=1)
+        g.map(label, 'variable')
+        g.map_dataframe(sns.kdeplot, x='value', color='black', alpha=1)
+        g.fig.subplots_adjust(hspace=-0.6)
+        g.set_titles("")
+        g.set_axis_labels(y_var="", x_var=x_var)
+        g.set(yticks=[])
+        g.despine(left=True)
+        plt.show()
 
-    g.map_dataframe(sns.kdeplot, x='value', fill=True, alpha=1)
-    g.map(label, 'variable')
-    g.map_dataframe(sns.kdeplot, x='value', color='black', alpha=1)
-    g.fig.subplots_adjust(hspace=-0.6)
-    g.set_titles("")
-    g.set_axis_labels(y_var="", x_var=x_var)
-    g.set(yticks=[])
-    g.despine(left=True)
-    plt.show()
+
 
 
 class NhanesDF:

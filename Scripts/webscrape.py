@@ -1,7 +1,4 @@
-import mechanicalsoup
-import selenium
 from selenium import webdriver
-import numpy as np
 import os
 import mechanicalsoup
 
