@@ -1,0 +1,31 @@
+Project:
+
+Motivation:
+    - Nature of project and why you chose it
+    - Specific question tried to address
+Data Sources:
+    - Where datasets located
+    - What formats they are in
+    - Important variables
+    - How many records
+    - Time periods
+Data Manipulation Methods:
+    - How specifically did you manipulate data
+    - How did you handle missing, incomplete, or incorrect data
+    - How did you perform conversion or processing steps
+    - What variables and steps did you use to join the two data resources to perform data analysis
+    - What challenged did you encourding and how did you solve them
+Analysis
+    - Include references to key functions or parts of your code
+    - What interesting relationships or insights did you get from your analysis
+    - What didn't work and why
+Visualizations:
+    - appropriate, effective, and expressive
+    - Title, axis labels, annotated
+    - referenced and explained in text
+Statement of work
+    - Who did what
+    - Assessment of how collaboration went
+    - How to improve collaboration in future work
+
+Code, 
