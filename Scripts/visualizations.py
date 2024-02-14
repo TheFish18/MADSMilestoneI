@@ -16,22 +16,30 @@ import sys
 # })
 
 class Visualizations:
-    @ staticmethod
-    def ridgeplot(df, standardize=True, units="", xlim=None, sorder=None):
+    """ More advanced reusable graphics """
+    @staticmethod
+    def output(save_p: str = None):
+        """ saves fig or shows fig if save_p is None, clears fig afterwards """
+        if save_p is None:
+            plt.show()
+        else:
+            plt.savefig()
+
+        plt.close()
+
+    @staticmethod
+    def ridgeplot(df, standardize=True, units="", xlim=None, sorder=None, save_p=None):
         """
         creates a ridgeplot from the given dataframe
 
-        parmas:
-            df (pandas.DataFrame): a pandas dataframe with at least two numeric features
-            standardize (bool): performs z-score normalization
-            units (string): optionally specify units
-            xlim (tuple): optionally specify limits of x axis
-
-        returns:
-            None and outputs a ridgeplot
-
+        :param df: (pd.DataFrame) with at least two numeric features
+        :param standardize: (bool) True: peforms z-score normalization
+        :param units: (string) optionally specify units
+        :param xlim: (string) optionally specify x limit
+        :param sorder: (string) optionally specify output order
+        :param save_p: (string) optionally specify whether/where to save
+        :return: None
         """
-
         def process_data(df, standardize):
             if standardize:
                 return zscore(df.select_dtypes(include=np.number)).melt()
@@ -56,7 +64,6 @@ class Visualizations:
 
         sns.set_theme(style='white', rc={'axes.facecolor': (0, 0, 0, 0), 'axes.linewidth': 2})
         palette = sns.color_palette('flare', num_of_cols)[::-1]
-        # TODO: dont hardcode number for palette
 
         g = sns.FacetGrid(df, row='variable', hue='variable', palette=palette, row_order=sorder, hue_order=sorder,
                           aspect=20, height=1, sharex=True, xlim=xlim)
@@ -69,10 +76,53 @@ class Visualizations:
         g.set_axis_labels(y_var="", x_var=x_var)
         g.set(yticks=[])
         g.despine(left=True)
-        plt.show()
 
+        Visualizations.output(save_p)
 
+    @staticmethod
+    def joint_grid_2dkde_marg_hist(df, x, y, xlim=None, ylim=None, save_p=None):
+        """
+        Plots a joint grid with 2d kde in the interior and histograms on the margins
+        :param df: pd.DataFrame: that contains x and y as cols
+        :param x: str: name of x column
+        :param y: str: name of y column
+        :param xlim: tuple: (x_min, x_max)
+        :param ylim: tuple: (y_min, y_max)
+        :param save_p: path or None:
+            if path: saves to path
+            if None: shows fig
+        :return:
+        """
+        g = sns.JointGrid(data=df, x=x, y=y, space=.05, xlim=xlim, ylim=ylim)
+        g.plot_joint(
+            sns.kdeplot, fill=True, cmap='rocket', clip=(xlim, ylim), thresh=0, levels=100)
+        g.plot_marginals(sns.histplot, color='#03051A', alpha=1, bins=100)
 
+        Visualizations.output(save_p)
+
+    @staticmethod
+    def violin_plot_calcium(df, x, y, hue, ylim=None, save_p=None):
+        """
+        Creates a split violin plot
+        :param df: pd.DataFrame
+        :param x: x column, must be in df
+        :param y: y column, must be in df
+        :param hue: hue categorical variable, must be in df
+        :param ylim: (y_min, y_max)
+        :param save_p: path or None:
+            if path: saves to path
+            if None: shows fig
+        :return:
+        """
+        f, ax = plt.subplots(figsize=(12, 12))
+        palette = sns.color_palette('flare', 5)
+        palette = palette[0], palette[4]
+        sns.violinplot(data=df, x='age_yrs_binned', y='calcium', hue='gender',
+                       split=True, gap=0.1, inner='quart', palette=palette, ax=ax)
+        plt.ylim(ylim)
+        Visualizations.output(save_p)
+
+# ========= clean ^ ============ dirty v =============
 
 class NhanesDF:
 
@@ -125,6 +175,7 @@ class NhanesDF:
         new_df = df.replace(d)
         return new_df
 
+
 class EDAViz:
     def __init__(self, nhanes_df):
         self.df = nhanes_df
@@ -173,40 +224,25 @@ class EDAViz:
                 self.output(save_path)
 
     @staticmethod
-    def ridgeplot(vars=None):
-        if vars is None:
-            vars = list(other_nutrients_dict().values())
-            vars.remove('alcohol')
-            vars.remove('copper')
-            vars.remove('phosphorus')
-            vars.remove('potassium')
-            vars.remove('caffeine')
-            vars.remove('theobromine')
-        vars = ['caffeine', 'vitaminD', 'vitaminC', *vars]
-        print(vars)
-        p = "/Users/joshfisher/PycharmProjects/MADS_Milestone1/Data/NHANES/nhanes.csv"
-        df = pd.read_csv(p)
+    # def ridgeplot(vars=None):
+    #     if vars is None:
+    #         vars = list(other_nutrients_dict().values())
+    #         vars.remove('alcohol')
+    #         vars.remove('copper')
+    #         vars.remove('phosphorus')
+    #         vars.remove('potassium')
+    #         vars.remove('caffeine')
+    #         vars.remove('theobromine')
+    #     vars = ['caffeine', 'vitaminD', 'vitaminC', *vars]
+    #     print(vars)
+    #     p = "/Users/joshfisher/PycharmProjects/MADS_Milestone1/Data/NHANES/nhanes.csv"
+    #     df = pd.read_csv(p)
+    #
+    #     df = df.loc[df.year == 2020]
+    #     df = df[vars]
+    #
+    #     ridgeplot(df, xlim=(-2, 2), sorder=vars)
 
-        df = df.loc[df.year == 2020]
-        df = df[vars]
-
-        ridgeplot(df, xlim=(-2, 2), sorder=vars)
-
-    @ staticmethod
-    def iron_sodium_joint_grid():
-        p = "/Users/joshfisher/PycharmProjects/MADS_Milestone1/Data/NHANES/nhanes.csv"
-        df = pd.read_csv(p)
-        hue_vars = list(NhanesDF.get_sparse_to_cat_dict().keys())
-        hue_vars.remove('married')
-        hue_vars.remove('time_in_us')
-
-        df = df.loc[df.year == 2020]
-
-        g = sns.JointGrid(data=df, x="iron", y='sodium', space=.05, xlim=(0, 50), ylim=(0, 10000))
-        g.plot_joint(
-            sns.kdeplot, fill=True, cmap='rocket', clip=((0, 50), (0, 10000)), thresh=0, levels=100)
-        g.plot_marginals(sns.histplot, color='#03051A', alpha=1, bins=100)
-        plt.show()
 
     @staticmethod
     def z_test():
@@ -228,31 +264,31 @@ class EDAViz:
         res = ttest_ind(male_cal_standard, female_cal_standard)
         print(res)
 
-    @staticmethod
-    def violin_plot_calcium():
-        p = "/Users/joshfisher/PycharmProjects/MADS_Milestone1/Data/NHANES/nhanes.csv"
-        df = pd.read_csv(p)
-        hue_vars = list(NhanesDF.get_sparse_to_cat_dict().keys())
-        hue_vars.remove('married')
-        hue_vars.remove('time_in_us')
 
-        df = NhanesDF.sparse_col_to_str(df)
-        df = df.loc[df.year == 2020]
-        # df = df.loc[df.age_yrs > 50]
-        df['age_yrs_binned'] = pd.cut(df['age_yrs'], [0, 20, 50, 79.9, 150], labels=["0-20", "20-50", "50-80", "80+"])
 
-        f, ax = plt.subplots(figsize=(12, 12))
-        palette = sns.color_palette('flare', 5)
-        palette = palette[0], palette[4]
-        # sns.boxplot(data=df, x='calcium', y='age_yrs_binned', hue='gender', ax=ax)
-        # sns.stripplot(data=df, x='calcium', y='age_yrs_binned', hue='gender', ax=ax, dodge=True, jitter=0.25)
-        sns.violinplot(data=df, x='age_yrs_binned', y='calcium', hue='gender',
-                       split=True, gap=0.1, inner='quart', palette=palette, ax=ax)
-        plt.ylim((-100, 3500))
-        plt.show()
 
 if __name__ == "__main__":
+    p = "/Users/joshfisher/PycharmProjects/MADS_Milestone1/Data/NHANES/nhanes.csv"
+    df = pd.read_csv(p)
+    hue_vars = list(NhanesDF.get_sparse_to_cat_dict().keys())
+    hue_vars.remove('married')
+    hue_vars.remove('time_in_us')
 
+    df = df.loc[df.year == 2020]
+    x = 'iron'
+    y = 'sodium'
+    xlim = (0, 50)
+    ylim = (0, 10000)
+
+    Visualizations.joint_grid_2dkde_marg_hist(df, x, y, xlim, ylim)
+    #
+    # g = sns.JointGrid(data=df, x="iron", y='sodium', space=.05, xlim=(0, 50), ylim=(0, 10000))
+    # g.plot_joint(
+    #     sns.kdeplot, fill=True, cmap='rocket', clip=((0, 50), (0, 10000)), thresh=0, levels=100)
+    # g.plot_marginals(sns.histplot, color='#03051A', alpha=1, bins=100)
+    # plt.show()
+
+    sys.exit()
     EDAViz.violin_plot_calcium()
     sys.exit()
     d = {}
@@ -311,5 +347,3 @@ if __name__ == "__main__":
     # # print(df.groupby(['race']).value_counts(['total_deficiencies'], True).to_string())
     # save_dir = '/Users/joshfisher/PycharmProjects/MADS_Milestone1/Data/Plots/EDA/Boxplots/Deficiences'
     # EDAViz(df).boxplots(hue_vars, ['total_deficiencies'], save_dir=save_dir)
-
-
